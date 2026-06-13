@@ -114,6 +114,26 @@ def calculate_risk_score(urls, urgency_phrases, domain_results=[]):
     
     return score, verdict
 
+def generate_explanations(urls, urgency_phrases, domain_results):
+    explanations = []
+    
+    if len(urls) > 0:
+        explanations.append(f"Message contains {len(urls)} link(s) - links are commonly used in scams to redirect victims")
+    
+    if urgency_phrases:
+        explanations.append(f"Detected manipulation language: {', '.join(urgency_phrases)} - scammers use urgency to pressure quick action")
+    
+    for domain in domain_results:
+        if domain.get("is_flagged"):
+            explanations.append(f"Domain '{domain['domain']}' is flagged as malicious by security vendors ({domain['malicious_votes']} reports)")
+        elif domain.get("malicious_votes", 0) > 0:
+            explanations.append(f"Domain '{domain['domain']}' has {domain['malicious_votes']} malicious report(s)")
+    
+    if not explanations:
+        explanations.append("No major red flags detected in this message")
+    
+    return explanations
+
 @app.get("/")
 def root():
     return {"message": "PhishPhishGo API is running"}
@@ -130,13 +150,16 @@ def analyze(input: MessageInput):
             if rep:
                 domain_results.append(rep)
     risk_score, verdict = calculate_risk_score(urls, urgency_phrases, domain_results)
+    explanations = generate_explanations(urls, urgency_phrases, domain_results)
+    
     return {
         "text": input.text,
         "urls_found": urls,
         "urgency_phrases_found": urgency_phrases,
         "domain_reputation": domain_results,
         "risk_score": risk_score,
-        "verdict": verdict
+        "verdict": verdict,
+        "explanations": explanations
     }
 
 @app.post("/decode-qr")
