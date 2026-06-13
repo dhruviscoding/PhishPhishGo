@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import re
@@ -6,6 +6,9 @@ import requests
 import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+from pyzbar.pyzbar import decode
+from PIL import Image
+import io
 
 load_dotenv()
 
@@ -53,6 +56,13 @@ def extract_domain(url):
         return domain
     except:
         return None
+    
+def follow_redirect(url):
+    try:
+        response = requests.head(url, allow_redirects=True, timeout=5)
+        return response.url
+    except Exception as e:
+        return url
 
 def check_domain_reputation(domain):
     if not domain:
@@ -128,3 +138,49 @@ def analyze(input: MessageInput):
         "risk_score": risk_score,
         "verdict": verdict
     }
+
+@app.post("/decode-qr")
+async def decode_qr(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        decoded_objects = decode(image)
+        
+        if not decoded_objects:
+            return {"error": "No QR code found in image"}
+        
+        qr_data = decoded_objects[0].data.decode('utf-8')
+        
+        # Run the QR content through the same analysis as text messages
+        urls = extract_urls(qr_data)
+        # Follow redirects to find final destination
+        final_urls = []
+        for url in urls:
+            final_url = follow_redirect(url)
+            final_urls.append(final_url)
+        urls = final_urls
+        if not urls and (qr_data.startswith('http') or qr_data.startswith('www')):
+            urls = [qr_data]
+        
+        urgency_phrases = detect_urgency_language(qr_data)
+        
+        domain_results = []
+        for url in urls:
+            domain = extract_domain(url)
+            if domain:
+                rep = check_domain_reputation(domain)
+                if rep:
+                    domain_results.append(rep)
+        
+        risk_score, verdict = calculate_risk_score(urls, urgency_phrases, domain_results)
+        
+        return {
+            "qr_content": qr_data,
+            "urls_found": urls,
+            "urgency_phrases_found": urgency_phrases,
+            "domain_reputation": domain_results,
+            "risk_score": risk_score,
+            "verdict": verdict
+        }
+    except Exception as e:
+        return {"error": str(e)}
