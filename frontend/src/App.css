@@ -6,14 +6,14 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0f1117;
-  color: #e4e6eb;
+  background: #16181d;
+  color: #ececec;
 }
 
 .app {
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 60px 20px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,22 +22,20 @@ body {
 
 .header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .header h1 {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ececec;
   margin-bottom: 8px;
+  letter-spacing: -0.5px;
 }
 
 .header p {
   font-size: 14px;
-  color: #9ca3af;
+  color: #8e8ea0;
 }
 
 .input-section {
@@ -49,19 +47,20 @@ body {
 
 textarea {
   width: 100%;
-  background: #1a1d29;
-  border: 1px solid #2d3142;
-  border-radius: 12px;
-  padding: 16px;
-  color: #e4e6eb;
+  background: #1e2128;
+  border: 1px solid #2f333d;
+  border-radius: 14px;
+  padding: 18px;
+  color: #ececec;
   font-size: 15px;
   resize: vertical;
   font-family: inherit;
+  line-height: 1.5;
 }
 
 textarea:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #f0b429;
 }
 
 textarea::placeholder {
@@ -69,10 +68,10 @@ textarea::placeholder {
 }
 
 button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
+  background: #f0b429;
+  color: #16181d;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 14px 24px;
   font-size: 15px;
   font-weight: 600;
@@ -81,21 +80,97 @@ button {
 }
 
 button:hover {
-  opacity: 0.9;
+  opacity: 0.85;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .result-section {
   width: 100%;
   margin-top: 24px;
-  background: #1a1d29;
-  border: 1px solid #2d3142;
-  border-radius: 12px;
-  padding: 16px;
+  background: #1e2128;
+  border: 1px solid #2f333d;
+  border-radius: 16px;
+  padding: 28px;
 }
 
-.result-section pre {
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 13px;
-  color: #9ca3af;
+.risk-meter {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #2f333d;
+}
+
+.risk-score {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.risk-verdict {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.details-section {
+  margin-bottom: 22px;
+}
+
+.details-section h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8e8ea0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.details-section ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.details-section li {
+  font-size: 14px;
+  color: #d1d5db;
+  padding-left: 14px;
+  border-left: 2px solid #f0b429;
+  line-height: 1.6;
+}
+
+.ml-info {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  padding-top: 18px;
+  border-top: 1px solid #2f333d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.error-section {
+  width: 100%;
+  margin-top: 24px;
+  background: #2a1a1a;
+  border: 1px solid #4a2828;
+  border-radius: 14px;
+  padding: 18px;
+  color: #ef4444;
+  text-align: center;
+  font-size: 14px;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
 }

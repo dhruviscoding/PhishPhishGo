@@ -48,6 +48,10 @@ print(f"Test set size: {len(X_test)}")
 model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
 model.fit(X_train, y_train)
 
+print("\nFeature Importances:")
+importances = pd.Series(model.feature_importances_, index=X.columns).sort_values(ascending=False)
+print(importances)
+
 # Evaluate
 y_pred = model.predict(X_test)
 print(f"\nAccuracy: {accuracy_score(y_test, y_pred):.4f}")
