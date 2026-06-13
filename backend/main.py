@@ -9,12 +9,16 @@ from dotenv import load_dotenv
 from pyzbar.pyzbar import decode
 from PIL import Image
 import io
+import joblib
+import pandas as pd
 
 load_dotenv()
 
 VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY")
 
 app = FastAPI()
+
+model = joblib.load('scam_model.pkl')
 
 app.add_middleware(
     CORSMiddleware,
@@ -87,21 +91,24 @@ def check_domain_reputation(domain):
         return {"error": str(e)}
     return None
 
-def calculate_risk_score(urls, urgency_phrases, domain_results=[]):
+def calculate_risk_score(urls, urgency_phrases, domain_results=[], ml_confidence=0):
     score = 0
     
-    if len(urls) > 0:
-        score += 20
+    # ML model contributes up to 50 points based on its confidence
+    score += (ml_confidence / 100) * 50
     
-    score += len(urgency_phrases) * 15
+    if len(urls) > 0:
+        score += 15
+    
+    score += len(urgency_phrases) * 10
     
     for domain in domain_results:
         if domain.get("is_flagged"):
-            score += 40
-        elif domain.get("malicious_votes", 0) > 0:
             score += 25
+        elif domain.get("malicious_votes", 0) > 0:
+            score += 15
     
-    score = min(score, 100)
+    score = min(round(score), 100)
     
     if score >= 70:
         verdict = "High Risk - Likely Scam"
@@ -138,10 +145,25 @@ def generate_explanations(urls, urgency_phrases, domain_results):
 def root():
     return {"message": "PhishPhishGo API is running"}
 
+def extract_features_single(text):
+    features = pd.DataFrame([{
+        'text_length': len(text),
+        'has_url': 1 if re.search(r'http|www', text, re.IGNORECASE) else 0,
+        'exclamation_count': text.count('!'),
+        'digit_count': sum(c.isdigit() for c in text),
+        'uppercase_ratio': sum(1 for c in text if c.isupper()) / len(text) if len(text) > 0 else 0,
+        'urgency_word_count': len(detect_urgency_language(text)),
+        'special_char_count': len(re.findall(r'[^\w\s]', text))
+    }])
+    return features
+
 @app.post("/analyze")
 def analyze(input: MessageInput):
     urls = extract_urls(input.text)
     urgency_phrases = detect_urgency_language(input.text)
+    features = extract_features_single(input.text)
+    ml_prediction = model.predict(features)[0]
+    ml_probability = model.predict_proba(features)[0][1]
     domain_results = []
     for url in urls:
         domain = extract_domain(url)
@@ -149,7 +171,7 @@ def analyze(input: MessageInput):
             rep = check_domain_reputation(domain)
             if rep:
                 domain_results.append(rep)
-    risk_score, verdict = calculate_risk_score(urls, urgency_phrases, domain_results)
+    risk_score, verdict = calculate_risk_score(urls, urgency_phrases, domain_results, ml_probability * 100)
     explanations = generate_explanations(urls, urgency_phrases, domain_results)
     
     return {
@@ -159,7 +181,9 @@ def analyze(input: MessageInput):
         "domain_reputation": domain_results,
         "risk_score": risk_score,
         "verdict": verdict,
-        "explanations": explanations
+        "explanations": explanations,
+        "ml_prediction": "spam" if ml_prediction == 1 else "ham",
+        "ml_confidence": round(float(ml_probability) * 100, 2),
     }
 
 @app.post("/decode-qr")
