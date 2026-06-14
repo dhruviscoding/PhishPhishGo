@@ -209,3 +209,8 @@ button:disabled {
   color: #ececec;
   font-size: 14px;
 }
+
+.risk-meter-circle {
+  display: flex;
+  justify-content: center;
+}

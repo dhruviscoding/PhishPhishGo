@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import logo from './assets/logo.svg'
+import RiskMeter from './RiskMeter'
 
 function App() {
   const [mode, setMode] = useState('text') // 'text' or 'qr'
@@ -109,13 +110,11 @@ function App() {
       {result && !result.error && (
         <div className="result-section">
           <div className="risk-meter">
-            <div className="risk-score" style={{ color: getRiskColor(result.risk_score) }}>
-              {result.risk_score}
-            </div>
+            <RiskMeter score={result.risk_score} color={getRiskColor(result.risk_score)} />
             <div className="risk-verdict" style={{ color: getRiskColor(result.risk_score) }}>
               {result.verdict}
-            </div>
           </div>
+        </div>
 
           <div className="details-section">
             <h3>Why this verdict?</h3>
