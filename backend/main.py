@@ -11,10 +11,14 @@ from PIL import Image
 import io
 import joblib
 import pandas as pd
+from groq import Groq
 
 load_dotenv()
 
 VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY")
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 app = FastAPI()
 
@@ -38,6 +42,11 @@ URGENCY_KEYWORDS = [
     "your account will be", "final notice", "last chance",
     "blocked", "suspended", "deactivated", "unauthorized"
 ]
+
+class ChatInput(BaseModel):
+    analysis_result: dict = {}
+    user_message: str
+    conversation_history: list = []
 
 def extract_urls(text):
     url_pattern = r'(https?://\S+|www\.\S+)'
@@ -230,5 +239,31 @@ async def decode_qr(file: UploadFile = File(...)):
             "verdict": verdict,
             "explanations": explanations,
         }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/chat")
+def chat(input: ChatInput):
+    try:
+        system_prompt = f"""You are a helpful cybersecurity assistant for PhishPhishGo, a scam detection tool used in India. 
+A user just analyzed a message and got this result:
+- Risk Score: {input.analysis_result.get('risk_score')}/100
+- Verdict: {input.analysis_result.get('verdict')}
+- Explanations: {', '.join(input.analysis_result.get('explanations', []))}
+
+Help the user understand what to do next. Be conversational, clear, and practical. If the risk is high, guide them to report via cybercrime.gov.in or the 1930 cyber helpline. If risk is low, reassure them. Keep responses concise (2-4 sentences) and in plain language suitable for non-technical users."""
+
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in input.conversation_history:
+            messages.append(msg)
+        messages.append({"role": "user", "content": input.user_message})
+
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            max_tokens=300
+        )
+
+        return {"response": response.choices[0].message.content}
     except Exception as e:
         return {"error": str(e)}

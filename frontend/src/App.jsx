@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import logo from './assets/logo.svg'
 import RiskMeter from './RiskMeter'
+import Chatbot from './Chatbot'
 
 function App() {
   const [mode, setMode] = useState('text') // 'text' or 'qr'
@@ -167,6 +168,8 @@ function App() {
       {result && result.error && (
         <div className="error-section">{result.error}</div>
       )}
+
+      <Chatbot analysisResult={result} />
     </div>
   )
 }
