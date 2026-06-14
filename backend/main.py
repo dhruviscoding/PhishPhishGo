@@ -185,7 +185,6 @@ def analyze(input: MessageInput):
         "ml_prediction": "spam" if ml_prediction == 1 else "ham",
         "ml_confidence": round(float(ml_probability) * 100, 2),
     }
-
 @app.post("/decode-qr")
 async def decode_qr(file: UploadFile = File(...)):
     try:
@@ -218,16 +217,18 @@ async def decode_qr(file: UploadFile = File(...)):
                 rep = check_domain_reputation(domain)
                 if rep:
                     domain_results.append(rep)
-        
+
         risk_score, verdict = calculate_risk_score(urls, urgency_phrases, domain_results)
-        
+        explanations = generate_explanations(urls, urgency_phrases, domain_results)
+
         return {
             "qr_content": qr_data,
             "urls_found": urls,
             "urgency_phrases_found": urgency_phrases,
             "domain_reputation": domain_results,
             "risk_score": risk_score,
-            "verdict": verdict
+            "verdict": verdict,
+            "explanations": explanations,
         }
     except Exception as e:
         return {"error": str(e)}

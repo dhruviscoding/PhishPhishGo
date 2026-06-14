@@ -3,6 +3,8 @@ import './App.css'
 import logo from './assets/logo.svg'
 
 function App() {
+  const [mode, setMode] = useState('text') // 'text' or 'qr'
+  const [qrFile, setQrFile] = useState(null)
   const [message, setMessage] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -26,6 +28,26 @@ function App() {
     setLoading(false)
   }
 
+  const handleQrAnalyze = async () => {
+  if (!qrFile) return
+  setLoading(true)
+  setResult(null)
+  try {
+    const formData = new FormData()
+    formData.append('file', qrFile)
+    const response = await fetch('http://127.0.0.1:8000/decode-qr', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await response.json()
+    setResult(data)
+  } catch (error) {
+    console.error('Error:', error)
+    setResult({ error: 'Failed to analyze QR code. Is the backend running?' })
+  }
+  setLoading(false)
+}
+
   const getRiskColor = (score) => {
     if (score >= 70) return '#ef4444'
     if (score >= 40) return '#f59e0b'
@@ -41,17 +63,48 @@ function App() {
         <p>Paste a suspicious message to check if it's a scam</p>
       </header>
 
-      <div className="input-section">
-        <textarea
-          placeholder="Paste the message here..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={6}
-        />
-        <button onClick={handleAnalyze} disabled={loading}>
-          {loading ? 'Analyzing...' : 'Analyze'}
+      <div className="mode-toggle">
+        <button 
+          className={mode === 'text' ? 'tab active' : 'tab'} 
+          onClick={() => setMode('text')}
+        >
+          Paste Message
+        </button>
+        <button 
+          className={mode === 'qr' ? 'tab active' : 'tab'} 
+          onClick={() => setMode('qr')}
+        >
+          Upload QR Code
         </button>
       </div>
+
+<div className="input-section">
+  {mode === 'text' ? (
+    <>
+      <textarea
+        placeholder="Paste the message here..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        rows={6}
+      />
+      <button onClick={handleAnalyze} disabled={loading}>
+        {loading ? 'Analyzing...' : 'Analyze'}
+      </button>
+    </>
+  ) : (
+    <>
+      <input 
+        type="file" 
+        accept="image/*"
+        onChange={(e) => setQrFile(e.target.files[0])}
+        className="file-input"
+      />
+      <button onClick={handleQrAnalyze} disabled={loading || !qrFile}>
+        {loading ? 'Analyzing...' : 'Analyze QR Code'}
+      </button>
+    </>
+  )}
+</div>
 
       {result && !result.error && (
         <div className="result-section">
@@ -98,9 +151,11 @@ function App() {
             </div>
           )}
 
-          <div className="ml-info">
-            ML Model: {result.ml_prediction} ({result.ml_confidence}% confidence)
-          </div>
+          {result.ml_prediction && (
+            <div className="ml-info">
+              ML Model: {result.ml_prediction} ({result.ml_confidence}% confidence)
+            </div>
+          )}
         </div>
       )}
 
@@ -110,5 +165,4 @@ function App() {
     </div>
   )
 }
-
 export default App

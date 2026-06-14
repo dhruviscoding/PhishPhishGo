@@ -174,3 +174,38 @@ button:disabled {
   height: 56px;
   margin-bottom: 12px;
 }
+
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.tab {
+  flex: 1;
+  background: #1e2128;
+  color: #8e8ea0;
+  border: 1px solid #2f333d;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #f0b429;
+  color: #16181d;
+  border-color: #f0b429;
+}
+
+.file-input {
+  width: 100%;
+  background: #1e2128;
+  border: 1px solid #2f333d;
+  border-radius: 14px;
+  padding: 18px;
+  color: #ececec;
+  font-size: 14px;
+}
