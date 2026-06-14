@@ -6,8 +6,8 @@ import requests
 import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
-from pyzbar.pyzbar import decode
-from PIL import Image
+import cv2
+import numpy as np
 import io
 import joblib
 import pandas as pd
@@ -198,13 +198,17 @@ def analyze(input: MessageInput):
 async def decode_qr(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
-        decoded_objects = decode(image)
+        nparr = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+        height, width = image.shape[:2]
+        if width > 1000:
+            scale = 1000 / width
+            image = cv2.resize(image, (int(width * scale), int(height * scale)))
+        detector = cv2.QRCodeDetector()
+        qr_data, _, _ = detector.detectAndDecode(image)
         
-        if not decoded_objects:
+        if not qr_data:
             return {"error": "No QR code found in image"}
-        
-        qr_data = decoded_objects[0].data.decode('utf-8')
         
         # Run the QR content through the same analysis as text messages
         urls = extract_urls(qr_data)
