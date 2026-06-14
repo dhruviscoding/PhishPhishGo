@@ -16,7 +16,7 @@ function App() {
     setLoading(true)
     setResult(null)
     try {
-      const response = await fetch('http://127.0.0.1:8000/analyze', {
+      const response = await fetch('https://phishphishgo.onrender.com/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: message })
@@ -37,7 +37,7 @@ function App() {
   try {
     const formData = new FormData()
     formData.append('file', qrFile)
-    const response = await fetch('http://127.0.0.1:8000/decode-qr', {
+    const response = await fetch('https://phishphishgo.onrender.com/decode-qr', {
       method: 'POST',
       body: formData
     })
