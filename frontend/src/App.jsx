@@ -158,6 +158,12 @@ function App() {
         </div>
       )}
 
+      {!result && !loading && (
+        <div className="empty-state">
+          <p>Paste a message or upload a QR code to check if it's a scam</p>
+        </div>
+      )}
+
       {result && result.error && (
         <div className="error-section">{result.error}</div>
       )}
