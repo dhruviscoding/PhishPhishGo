@@ -28,11 +28,29 @@ def extract_features(df):
     features['special_char_count'] = df['text'].str.count(r'[^\w\s]')
     return features
 
-# Load data
+# Load original dataset
 df = pd.read_csv('data/spam.csv', encoding='latin-1')
 df = df[['v1', 'v2']]
 df.columns = ['label', 'text']
+
+# Load India-specific dataset (2K)
+df_india_small = pd.read_csv('data/spam_ham_india.csv')
+df_india_small.columns = ['text', 'label']
+df_india_small = df_india_small[['label', 'text']]
+
+# Load India-specific dataset (100K)
+df_india_large = pd.read_csv('data/indian_email_dataset_100k.csv')
+df_india_large.columns = ['msg', 'label']
+df_india_large = df_india_large.rename(columns={'msg': 'text'})
+df_india_large = df_india_large[['label', 'text']]
+
+# Combine all datasets
+df = pd.concat([df, df_india_small, df_india_large], ignore_index=True)
+df = df.dropna(subset=['text'])
 df['label_num'] = df['label'].map({'ham': 0, 'spam': 1})
+
+print(f"Combined dataset size: {len(df)}")
+print(df['label'].value_counts())
 
 # Extract features
 X = extract_features(df)
